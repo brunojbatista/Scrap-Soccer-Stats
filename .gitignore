@@ -1,0 +1,7 @@
+*.txt
+Cache/
+*.json
+*.txt
+**/__pycache__
+**/*.exe
+FulltraderAccount.py
