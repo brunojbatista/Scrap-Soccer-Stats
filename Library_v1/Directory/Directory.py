@@ -30,7 +30,6 @@ class Directory():
 
     def set_path(self, ):
         if self.is_dir(): self.fullpath = os.path.realpath(self.path);
-        print(f"self.fullpath: {self.fullpath}")
 
     def get_path(self, ):
         return self.fullpath;
@@ -115,14 +114,11 @@ class Directory():
         return filenames
     
     def wait_filename(self, waiting_function: callable, path = None, attempts: int = 60):
-        print("="*80)
-        print(">> wait_filename:")
         while True:
             time.sleep(1)
             filenames_splitted = [re.split(r"\.", x) for x in self.find_filenames(r".*", path)] 
             filenames_splitted = [ splitted[0:(len(splitted)-1)] for splitted in filenames_splitted ]
             filenames = [ default_lower(clear_accents(".".join(splitted))) for splitted in filenames_splitted ]
-            print(f"\tfilenames: {filenames}")
             for name in filenames:
                 if waiting_function(name): return True;
             attempts -= 1

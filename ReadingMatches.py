@@ -18,6 +18,8 @@ from Cache import Cache
 from CacheStats import CacheStats
 from FulltraderAccount import FulltraderAccount
 
+from Exceptions.StatNotFoundError import StatNotFoundError
+
 class ReadingMatches():
     def __init__(self, driver: DriverInterface) -> None:
         self.driver = driver
@@ -139,7 +141,7 @@ class ReadingMatches():
         inputSelected = self.actions.get_element("//*[@id='__next']/section/div[2]/div[2]/div/div/div[1]/div[1]/div/div[2]/div[.//p[contains(text(), 'Selecione a data')]]//label[./div[@data-checked]]/input")
         return self.actions.get_attr(inputSelected, 'value')
 
-    def execute(self, ):
+    def execute(self, step: str = None):
         # from threading import Thread
         # from DelayedKeyboardInterrupt import DelayedKeyboardInterrupt
         # import signal
@@ -182,7 +184,7 @@ class ReadingMatches():
                 # Leitura das informações gerais da partida
                 featuredCache = cache.getFeatured()
                 # readingFeatured.read()
-                if not featuredCache.hasScore():
+                if (not featuredCache.hasScore() and featuredCache.isStarted()) or step == 'update-odd':
                     readingMatchCard.openMatch()
                     readingFeatured.read()
                     featured = readingFeatured.get()
@@ -191,6 +193,7 @@ class ReadingMatches():
                 # -----------------------------------------------------------------
                 # Ler os stats caso não exista
                 statsCache = cacheStats.getStats()
+                hasStats = True
 
                 for matchTab, sizeTab in self.typeReadings:
                     print("*"*50)
@@ -202,14 +205,22 @@ class ReadingMatches():
                         print("Não tem o stats setado....")
                         # self.actions.sleep(2)
                         readingMatchCard.openMatch()
-                        reading = Reading(self.driver, matchTab, sizeTab, self.statReadings)
-                        reading.read()
-                        stats = reading.get()
-                        print(f"stats: {stats.getAll()}")
-                        cacheStats.setStats(stats)
-                        cache.setStatsFilename(cacheStats.getFilename())
+                        try:
+                            reading = Reading(self.driver, matchTab, sizeTab, self.statReadings)
+                            reading.read()
+                            stats = reading.get()
+                            print(f"stats: {stats.getAll()}")
+                            cacheStats.setStats(stats)
+                            cache.setStatsFilename(cacheStats.getFilename())
+                        except StatNotFoundError:
+                            hasStats = False
                     else:
                         print("Ja tem stats setado...")
+                    
+                    if not hasStats: break;
+            
+                if not hasStats: # Remover a partida da lista
+                    cache.removeMatch(match)
 
             for position in range(1, self.totalAvailableMatches+1):
                 process(position)

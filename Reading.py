@@ -12,6 +12,7 @@ from Library_v1.Utils.string import (
 )
 
 from Exceptions.ActionError import ActionError
+from Exceptions.StatNotFoundError import StatNotFoundError
 
 BASE_XPATH = "//*[@id='__next']/section/div[2]/div[2]/div/div/div/div[3]/div"
 getInfoXpath = lambda relativeXpath: f"{BASE_XPATH}{relativeXpath}"
@@ -328,6 +329,7 @@ class Reading():
         try:
             elements = self.actions.get_elements(tabButtonsXPath, time=5)
         except ValueError:
+            self.checkNoDataMatch()
             input(f"Ocorreu um erro na leitura dos botões da aba de '{tabName}', verifique o que pode ter causado...")
         if len(elements) <= 0: return False
         tabSlug = slug_name(tabName)
@@ -528,6 +530,10 @@ class Reading():
                     home.append(-1)
                     continue
 
+                if re.search(r"^\s*\(\s*%\s*\)\s*$", str(data)):
+                    home.append(-1)
+                    continue
+
                 raise StatReadingError(f"A leitura não identificou a estatística '{measurement}' no lado da casa")
 
             for data in awayData:
@@ -543,6 +549,10 @@ class Reading():
                     continue;
                 
                 if data == '':
+                    away.append(-1)
+                    continue
+
+                if re.search(r"^\s*\(\s*%\s*\)\s*$", str(data)):
                     away.append(-1)
                     continue
 
@@ -566,7 +576,12 @@ class Reading():
 
         self.tempStats = stats
 
+    def checkNoDataMatch(self, ):
+        if self.actions.has_element("//p[text()='Jogo sem dados de pré live']", time=0):
+            raise StatNotFoundError("Jogo sem dados de pré live")
+
     def read(self, ):
+        self.checkNoDataMatch()
         self.setStat()
         for stat in self.statReadings:
             print(f"\tstat: {stat}")

@@ -42,6 +42,9 @@ class Cache(JsonStorage):
         data = self.json.read()
         if data is None: return {}
         return data
+    
+    def hasData(self, ) -> bool:
+        return not self.json.read() is None
         
     def checkMatch(self, ):
         if self.match is None: raise ValueError("Não há partida definida")
@@ -58,8 +61,11 @@ class Cache(JsonStorage):
         matchData = data[self.match.getId()]['match']
         return Match(matchData['hometeam'], matchData['awayteam'], matchData['time'])
     
-    def setMatch(self, match: Match) -> bool:
+    def setMatchRef(self, match: Match):
         self.match = match
+    
+    def setMatch(self, match: Match) -> bool:
+        self.setMatchRef(match)
         if self.hasId(): 
             print("Partida já setada...")
             return False
@@ -75,6 +81,21 @@ class Cache(JsonStorage):
         data[id]["match"] = self.match.get()
         self.json.write(data)
         return True
+    
+    def removeMatch(self, match: Match) -> bool:
+        self.setMatchRef(match)
+        if not self.hasId(): 
+            print("Partida não existe mais...")
+            return False
+        id = self.match.getId()
+        data = self.read()
+        del data[id]
+        self.json.write(data)
+        return True
+    
+    def getMathes(self, ) -> list:
+        data = self.read()
+        return [Match(data[id]['match']['hometeam'], data[id]['match']['awayteam'], data[id]['match']['time']) for id in data]
     
     def setFeatured(self, featured: Featured) -> bool:
         if not self.hasId(): return False
