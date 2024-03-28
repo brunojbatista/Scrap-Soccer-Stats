@@ -99,7 +99,7 @@ class Featured():
         return self.date
 
     def isStarted(self, shifttedHour: int = -2):
-        print(f">> isStarted:")
+        # print(f">> isStarted:")
         # if self.data["Data"] is None or self.data["Hora"] is None: return True
         # match = re.search(r"(\d{2})\/(\d{2})\/(\d{4})", self.data["Data"])
         # day = int(match.group(1))
@@ -112,9 +112,9 @@ class Featured():
         matchDate = self.getDate()
         if matchDate is None: return True
         dateNowShiftted = add_hour(date_now(), shifttedHour)
-        print(f"dateNowShiftted: {dateNowShiftted}")
-        print(f"matchDate: {matchDate}")
-        print(f"test: {dateNowShiftted > matchDate}")
+        # print(f"dateNowShiftted: {dateNowShiftted}")
+        # print(f"matchDate: {matchDate}")
+        # print(f"test: {dateNowShiftted > matchDate}")
         return dateNowShiftted > matchDate
 
     def hasScore(self, ):
@@ -152,6 +152,27 @@ class Featured():
     
     def getOddUnder25FT(self, ):
         return self.data["Odd Under 2.5 FT"]
+    
+    def getCasaLGScore(self, ):
+        return self.data["Casa LG Score"]
+    
+    def getHScore(self, ):
+        return self.data["H Score"]
+    
+    def getForaLGScore(self, ):
+        return self.data["Fora LG Score"]
+    
+    def getLiga(self, ):
+        return self.data["Liga"]
+    
+    def getPais(self, ):
+        return self.data["Pais"]
+
+    def getHomeFT(self, ):
+        return self.data["Casa FT"]
+    
+    def getAwayFT(self, ):
+        return self.data["Fora FT"]
 
     def getMap(self, ):
         return self.getAll()

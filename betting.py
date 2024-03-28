@@ -21,6 +21,7 @@ import re
 from Exceptions.MarketNotFoundError import MarketNotFoundError
 
 from Betting.Under25FT import Under25FT
+from Betting.Draw import Draw
 
 class Betting():
     def __init__(self, matchTab: str, sizeTab: str, market: str, classification: str) -> None:
@@ -36,10 +37,16 @@ class Betting():
                 'Equilibrado': [],
                 'Zebra': [],
             },
+            'Draw': {
+                'Super Favorito': [],
+                'Favorito': [],
+                'Equilibrado': [],
+                'Zebra': [],
+            },
         }
         if self.matchTab not in ['5 jogos', '10 jogos', '20 jogos']: raise MarketNotFoundError('Quantidade de partidas não identificado')
         if self.sizeTab not in ['Casa/Visitante', 'Global']: raise MarketNotFoundError('Lado da partida não identificado')
-        if self.market not in ['Under 2.5 FT']: raise MarketNotFoundError('Mercado não identificado')
+        if self.market not in ['Under 2.5 FT', 'Draw']: raise MarketNotFoundError('Mercado não identificado')
         if self.classification not in ['Super Favorito', 'Favorito', 'Equilibrado', 'Zebra']: raise MarketNotFoundError('Classificação das partidas não identificado')
 
     def setBets(self, ):
@@ -48,10 +55,18 @@ class Betting():
                 if self.market == 'Under 2.5 FT':
                     bet = Under25FT(self.matchTab, self.sizeTab, self.classification, match, featured, stats)
                     if bet.hasClassification(): self.bets[self.market][self.classification].append(bet)
+                if self.market == 'Draw':
+                    bet = Draw(self.matchTab, self.sizeTab, self.classification, match, featured, stats)
+                    if bet.hasClassification(): self.bets[self.market][self.classification].append(bet)
         # print(f"self.bets: {self.bets}")
 
     def getBets(self, ):
         return self.bets[self.market][self.classification]
+    
+    def orderBets(self, ):
+        bets = [(x, x.getFeatured().getDate()) for x in self.bets[self.market][self.classification]]
+        bets.sort(reverse=False, key=lambda x: x[1])
+        self.bets[self.market][self.classification] = [x[0] for x in bets]
 
     def execute(self, date: datetime, *methods):
         formatDate = format_date(date, '<YYYY>-<MM>-<DD>')
@@ -70,20 +85,40 @@ class Betting():
             self.matches.append((match, featured, stats))
         
         self.setBets()
+        self.orderBets()
+        
+        # if methods[0] == "m":
+        #         methods = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10', 'm11', 'm12', 'm13', 'm14', 'm15', 'm16', 'm17', 'm18', 'm19']
         
         print('='*50)
         print(f"Partidas do dia {format_date(date, '<DD>/<MM>/<YYYY>')}:")
-        for method in methods:
-            hasSignalBet = [bet for bet in self.getBets() if bet.isSignal(method)]
-            # print(f"hasSignalBet: {hasSignalBet}")
+        print(f"Mercado: {self.market}")
+        for bet in self.getBets():
+            methodsAvailable = []
+            for method in methods:
+                signals = bet.getSignal(method)
+                for signal in signals:
+                    if signal not in methodsAvailable: methodsAvailable.append(signal)
+            # methodsAvailable = [x for x in bet.getSignal(methods)]
+            if len(methodsAvailable) <= 0: continue
             print('-'*30)
-            print(f">> Método de {self.market}: {method}")
-            for bet in hasSignalBet:
-                bet.print()
+            bet.print()
+            print(f"Selecionado pelos filtro(s): {' | '.join(methodsAvailable)}")
+
+
+        # for method in methods:
+        #     hasSignalBet = [bet for bet in self.getBets() if bet.isSignal(method)]
+        #     # print(f"hasSignalBet: {hasSignalBet}")
+        #     print('-'*30)
+        #     print(f">> Método de {self.market}: {method}")
+        #     for bet in hasSignalBet:
+        #         bet.print()
 
 # script = sys.argv[0]
-date = sys.argv[1]
-# methods = sys.argv[2:]
+type = sys.argv[1]
+date = sys.argv[2]
+methods = sys.argv[3:]
+# print(f"methods: {methods}")
 # date = 'today'
 # date = 'tomorrow'
 # date = '2024-02-27'
@@ -102,23 +137,39 @@ else:
     date = get_date(year, month, day)
 # print(f"date: {date}")
 
-
-Betting(
-    '5 jogos', 
-    'Casa/Visitante', 
-    'Under 2.5 FT', 
-    'Equilibrado')\
-.execute(
-    date, 
-    'default', 
-    'm2', 
-    'm3', 
-    'm4', 
-    'm5', 
-    'm6', 
-    'm7', 
-    'm8', 
-    'm9'
-)
-
-
+if type == 'u25ft' or type == 'u25':
+    Betting(
+        '5 jogos', 
+        'Casa/Visitante', 
+        'Under 2.5 FT', 
+        'Equilibrado')\
+    .execute(
+        date,
+        *methods 
+        # 'm1', 
+        # 'm2', 
+        # 'm3', 
+        # 'm4', 
+        # 'm5',
+        # 'm6',
+        # 'm7',
+        # 'm8',
+    )
+elif type == 'draw' or type == 'd':
+    Betting(
+        '5 jogos', 
+        'Casa/Visitante', 
+        'Draw', 
+        'Equilibrado')\
+    .execute(
+        date,
+        *methods 
+        # 'm1', 
+        # 'm2', 
+        # 'm3', 
+        # 'm4', 
+        # 'm5',
+        # 'm6',
+        # 'm7',
+        # 'm8',
+    )

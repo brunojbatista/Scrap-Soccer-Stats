@@ -166,6 +166,7 @@ class ReadingMatches():
             def process(position: int):
                 print("\n")
                 print("="*50)
+                print(f"Partida: {position} de {self.totalAvailableMatches}")
                 # input("Esperando para ler a proxima partida...")
 
                 readingMatchCard    = ReadingMatchCard(self.driver, position)
